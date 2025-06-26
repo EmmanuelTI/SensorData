@@ -2,17 +2,144 @@
 <androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/box_inset_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:layout_height="match_parent">
+    <!--android:background="@drawable/fondo_reloj"> -->
 
-    <!-- Aquí puedes colocar elementos opcionales -->
-    <TextView
-        android:id="@+id/text_hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hola desde el reloj"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:layout_gravity="center" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#66000000">
+
+            <!-- Apartado Ritmo Cardíaco -->
+            <TextView
+                android:id="@+id/tv_ritmo_cardiaco_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ritmo Cardíaco"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="0dp"
+            android:paddingTop="15dp" />
+
+            <TextView
+                android:id="@+id/tv_ritmo_cardiaco_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-- bpm"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <!-- Apartado GPS -->
+            <TextView
+                android:id="@+id/tv_gps_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GPS"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="0dp" />
+
+            <TextView
+                android:id="@+id/tv_gps_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lat: ---, Lon: ---"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <!-- Apartado Estrés -->
+            <TextView
+                android:id="@+id/tv_estres_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Estrés"
+                android:textColor="@android:color/holo_orange_light"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="0dp" />
+
+            <TextView
+                android:id="@+id/tv_estres_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nivel: --"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <!-- Apartado Giroscopio -->
+            <TextView
+                android:id="@+id/tv_giroscopio_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giroscopio"
+                android:textColor="@android:color/holo_blue_light"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="0dp" />
+
+            <TextView
+                android:id="@+id/tv_giroscopio_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="X: ---, Y: ---, Z: ---"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <!-- Apartado Acelerómetro -->
+            <TextView
+                android:id="@+id/tv_acelerometro_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Acelerómetro"
+                android:textColor="@android:color/holo_purple"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="0dp" />
+
+            <TextView
+                android:id="@+id/tv_acelerometro_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="X: ---, Y: ---, Z: ---"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:paddingBottom="12dp" />
+
+            <!-- Apartado Temperatura -->
+            <TextView
+                android:id="@+id/tv_temperatura_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Temperatura"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_temperatura_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-- °C"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:paddingBottom="12dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </androidx.wear.widget.BoxInsetLayout>

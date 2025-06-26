@@ -23,6 +23,9 @@
             android:name="com.google.android.wearable"
             android:required="true" />
 
+
+
+
         <!-- Para que funcione sin teléfono -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
