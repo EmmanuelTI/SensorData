@@ -16,15 +16,12 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:theme="@style/Theme.OTYS">  <!-- Tema base para la app -->
 
         <!-- Librería Wear OS -->
         <uses-library
             android:name="com.google.android.wearable"
             android:required="true" />
-
-
-
 
         <!-- Para que funcione sin teléfono -->
         <meta-data
@@ -36,7 +33,7 @@
             android:name="equipo.dinamita.otys.presentation.MainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@style/MainActivityTheme.Starting">
+            android:theme="@style/MainActivityTheme.Starting">  <!-- Tema específico -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

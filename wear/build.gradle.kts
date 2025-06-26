@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.viewpager2)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
@@ -66,6 +67,18 @@ dependencies {
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("androidx.wear:wear:1.3.0")
+
+    implementation(libs.androidx.viewpager2) // Para el carrusel con ViewPager2
+    implementation("androidx.fragment:fragment-ktx:1.6.1") // Para usar fragmentos con ViewPager2
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1") // Para soporte de ciclo de vida
+    implementation("androidx.wear:wear:1.3.0") // Componentes de Wear OS
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3") // Coroutines para servicios de Google Play
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+
+
+
+
+    implementation ("androidx.appcompat:appcompat:1.6.1")
 
 
 
