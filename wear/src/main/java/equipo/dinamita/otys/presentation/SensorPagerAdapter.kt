@@ -12,8 +12,8 @@ class SensorPagerAdapter(
     override fun getItemCount(): Int = data.size
 
     override fun createFragment(position: Int): Fragment {
-        val (title, value) = data[position]
-        return DataFragment.newInstance(title, value)
+        val title = data[position].first
+        return DataFragment.newInstance(title)
     }
 
     fun updateData(newData: List<Pair<String, String>>) {

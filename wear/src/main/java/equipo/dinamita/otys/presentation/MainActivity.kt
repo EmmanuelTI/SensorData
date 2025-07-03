@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -19,7 +18,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: SensorViewModel
     private lateinit var adapter: SensorPagerAdapter
-    private lateinit var tvHeartRate: TextView
     private lateinit var heartRateSensorManager: HeartRateSensorManager
 
     private val REQUIRED_PERMISSIONS = mutableListOf(
@@ -34,26 +32,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tvHeartRate = findViewById(R.id.tvHeartRate)
         viewModel = ViewModelProvider(this)[SensorViewModel::class.java]
 
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
         adapter = SensorPagerAdapter(this, emptyList())
         viewPager.adapter = adapter
 
-        // Observamos cambios en los datos de sensores para actualizar UI
+        // Observamos todos los sensores y actualizamos el ViewPager
         viewModel.sensorData.observe(this) { newSensorData ->
             adapter.updateData(newSensorData)
-
-            val heartRate = newSensorData.find { it.first == "Ritmo Cardíaco" }?.second ?: "-- bpm"
-            tvHeartRate.text = "Ritmo Cardíaco: $heartRate"
         }
 
-        // Crear e iniciar HeartRateSensorManager para registrar sensor con lifecycle
+        // Manejo del sensor desde el lifecycle
         heartRateSensorManager = HeartRateSensorManager(this, lifecycle, viewModel)
         lifecycle.addObserver(heartRateSensorManager)
 
-        // Verificar permisos y arrancar servicio foreground si están dados
+        // Verificar permisos antes de iniciar el servicio en segundo plano
         if (REQUIRED_PERMISSIONS.all {
                 ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
             }) {
