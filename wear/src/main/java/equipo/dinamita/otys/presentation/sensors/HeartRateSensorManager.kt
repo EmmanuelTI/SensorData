@@ -6,28 +6,33 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleOwner
+import equipo.dinamita.otys.presentation.SensorViewModel
+
 
 class HeartRateSensorManager(
     private val context: Context,
-    private val lifecycle: Lifecycle
-) : SensorEventListener, LifecycleObserver {
+    private val lifecycle: Lifecycle,
+    private val viewModel: SensorViewModel
+) : DefaultLifecycleObserver, SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val heartRateSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
+    private var heartRateSensor: Sensor? = null
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun start() {
-        heartRateSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-            Log.d("HEART_RATE", "Sensor registrado")
-        } ?: Log.e("HEART_RATE", "Sensor de ritmo cardíaco no disponible")
+    override fun onResume(owner: LifecycleOwner) {
+        heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
+        if (heartRateSensor == null) {
+            Log.e("HEART_RATE", "Sensor de ritmo cardíaco no disponible")
+            viewModel.resetHeartRate()  // Actualiza el valor a "-- bpm"
+            return
+        }
+        sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        Log.d("HEART_RATE", "Sensor registrado")
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun stop() {
+    override fun onPause(owner: LifecycleOwner) {
         sensorManager.unregisterListener(this)
         Log.d("HEART_RATE", "Sensor desregistrado")
     }
@@ -35,13 +40,14 @@ class HeartRateSensorManager(
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
-                val heartRateValue = it.values[0]
-                Log.d("HEART_RATE", "Valor: $heartRateValue bpm")
+                val bpm = it.values[0].toInt()
+                Log.d("HEART_RATE", "Valor: $bpm bpm")
+                viewModel.updateSensor("Ritmo Cardíaco", "$bpm bpm")
             }
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Opcional
+        // No es necesario implementar para este caso
     }
 }
