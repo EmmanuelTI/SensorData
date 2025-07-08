@@ -11,9 +11,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import equipo.dinamita.otys.R
+import equipo.dinamita.otys.presentation.sensors.AccelerometerSensorManager
 import equipo.dinamita.otys.presentation.sensors.GpsLocationManager
+import equipo.dinamita.otys.presentation.sensors.GyroscopeSensorManager
 import equipo.dinamita.otys.presentation.sensors.HeartRateForegroundService
 import equipo.dinamita.otys.presentation.sensors.HeartRateSensorManager
+import equipo.dinamita.otys.presentation.sensors.StressSensorManager
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,6 +26,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var heartRateSensorManager: HeartRateSensorManager
     private lateinit var gpsLocationManager: GpsLocationManager  // 📌 Aquí lo declaramos
     private lateinit var gyroscopeSensorManager: GyroscopeSensorManager
+    private lateinit var accelerometerSensorManager: AccelerometerSensorManager
+
+
+    private lateinit var stressSensorManager: StressSensorManager
 
     private val REQUIRED_PERMISSIONS = mutableListOf(
         Manifest.permission.BODY_SENSORS,
@@ -52,10 +60,17 @@ class MainActivity : AppCompatActivity() {
         lifecycle.addObserver(heartRateSensorManager)
 
         gpsLocationManager = GpsLocationManager(this, lifecycle, viewModel)
-        lifecycle.addObserver(gpsLocationManager)  // 📌 Añadimos el observer de GPS
+        lifecycle.addObserver(gpsLocationManager)
 
         gyroscopeSensorManager = GyroscopeSensorManager(this, lifecycle, viewModel)
         lifecycle.addObserver(gyroscopeSensorManager)
+
+        accelerometerSensorManager = AccelerometerSensorManager(this, lifecycle, viewModel)
+        lifecycle.addObserver(accelerometerSensorManager)
+
+        stressSensorManager = StressSensorManager(this, lifecycle, viewModel)
+        lifecycle.addObserver(stressSensorManager)
+
 
         // Verificar permisos antes de iniciar servicios
         if (REQUIRED_PERMISSIONS.all {
