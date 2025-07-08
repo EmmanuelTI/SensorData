@@ -14,7 +14,7 @@ import equipo.dinamita.otys.R
 import equipo.dinamita.otys.presentation.sensors.AccelerometerSensorManager
 import equipo.dinamita.otys.presentation.sensors.GpsLocationManager
 import equipo.dinamita.otys.presentation.sensors.GyroscopeSensorManager
-import equipo.dinamita.otys.presentation.sensors.HeartRateForegroundService
+import equipo.dinamita.otys.presentation.sensors.MultiSensorForegroundService
 import equipo.dinamita.otys.presentation.sensors.HeartRateSensorManager
 import equipo.dinamita.otys.presentation.sensors.StressSensorManager
 
@@ -76,23 +76,26 @@ class MainActivity : AppCompatActivity() {
         if (REQUIRED_PERMISSIONS.all {
                 ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
             }) {
-            startHeartRateService()
+            startSensorService()
+
         } else {
             requestPermissions(REQUIRED_PERMISSIONS, 100)
         }
     }
 
-    private fun startHeartRateService() {
-        val serviceIntent = Intent(this, HeartRateForegroundService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent)
+    private fun startSensorService() {
+        val intent = Intent(this, MultiSensorForegroundService::class.java)
+        ContextCompat.startForegroundService(this, intent)
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 100 && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-            startHeartRateService()
+            startSensorService()
+
         } else {
             Log.e("PERMISOS", "Permisos requeridos denegados")
         }

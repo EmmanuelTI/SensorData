@@ -32,7 +32,7 @@
             android:value="true" />
 
         <service
-            android:name=".presentation.sensors.HeartRateForegroundService"
+            android:name=".presentation.sensors.MultiSensorForegroundService"
             android:foregroundServiceType="health"
             android:exported="false" />
 

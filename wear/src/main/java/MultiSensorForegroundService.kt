@@ -14,15 +14,23 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 
-class HeartRateForegroundService : Service(), SensorEventListener {
+class MultiSensorForegroundService : Service(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
+
     private var heartRateSensor: Sensor? = null
+    private var accelerometerSensor: Sensor? = null
+    private var gyroscopeSensor: Sensor? = null
+    private var gravitySensor: Sensor? = null
 
     override fun onCreate() {
         super.onCreate()
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+
         heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
+        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -30,7 +38,19 @@ class HeartRateForegroundService : Service(), SensorEventListener {
 
         heartRateSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-        } ?: Log.e("HeartRateService", "Sensor de ritmo cardíaco no disponible")
+        }
+
+        accelerometerSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+
+        gyroscopeSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+
+        gravitySensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
 
         return START_STICKY
     }
@@ -43,20 +63,25 @@ class HeartRateForegroundService : Service(), SensorEventListener {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_HEART_RATE) {
-            val bpm = event.values[0].toInt()
-            Log.d("HeartRateService", "Ritmo cardíaco: $bpm bpm")
-            // Aquí puedes enviar los datos a la UI, base de datos, etc.
+        event?.let {
+            val sensorName = when (it.sensor.type) {
+                Sensor.TYPE_HEART_RATE -> "Ritmo Cardíaco"
+                Sensor.TYPE_ACCELEROMETER -> "Acelerómetro"
+                Sensor.TYPE_GYROSCOPE -> "Giroscopio"
+                Sensor.TYPE_GRAVITY -> "Gravedad"
+                else -> "Desconocido"
+            }
+
+            val data = it.values.joinToString(", ") { v -> "%.2f".format(v) }
+            Log.d("MultiSensorService", "$sensorName -> $data")
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // No implementado
-    }
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     private fun createNotification(): Notification {
-        val channelId = "heart_rate_channel"
-        val channelName = "Sensor Ritmo Cardíaco"
+        val channelId = "multi_sensor_channel"
+        val channelName = "Sensores en Segundo Plano"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val chan = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
@@ -65,14 +90,14 @@ class HeartRateForegroundService : Service(), SensorEventListener {
         }
 
         return NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Sensor activo")
-            .setContentText("Leyendo ritmo cardíaco en segundo plano")
+            .setContentTitle("Sensores activos")
+            .setContentText("Recopilando datos de sensores en segundo plano")
             .setSmallIcon(android.R.drawable.ic_menu_info_details)
             .setOngoing(true)
             .build()
     }
 
     companion object {
-        const val NOTIFICATION_ID = 1234
+        const val NOTIFICATION_ID = 5678
     }
 }
