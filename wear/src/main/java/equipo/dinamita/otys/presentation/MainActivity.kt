@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: SensorPagerAdapter
     private lateinit var heartRateSensorManager: HeartRateSensorManager
     private lateinit var gpsLocationManager: GpsLocationManager  // 📌 Aquí lo declaramos
+    private lateinit var gyroscopeSensorManager: GyroscopeSensorManager
 
     private val REQUIRED_PERMISSIONS = mutableListOf(
         Manifest.permission.BODY_SENSORS,
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
 
         gpsLocationManager = GpsLocationManager(this, lifecycle, viewModel)
         lifecycle.addObserver(gpsLocationManager)  // 📌 Añadimos el observer de GPS
+
+        gyroscopeSensorManager = GyroscopeSensorManager(this, lifecycle, viewModel)
+        lifecycle.addObserver(gyroscopeSensorManager)
 
         // Verificar permisos antes de iniciar servicios
         if (REQUIRED_PERMISSIONS.all {
