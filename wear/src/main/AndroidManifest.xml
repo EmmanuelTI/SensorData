@@ -12,6 +12,7 @@
 
     <!-- Wear OS -->
     <uses-feature android:name="android.hardware.type.watch" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="true" />
 
     <application
         android:allowBackup="true"

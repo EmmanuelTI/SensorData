@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import equipo.dinamita.otys.R
+import equipo.dinamita.otys.presentation.sensors.GpsLocationManager
 import equipo.dinamita.otys.presentation.sensors.HeartRateForegroundService
 import equipo.dinamita.otys.presentation.sensors.HeartRateSensorManager
 
@@ -19,9 +20,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: SensorViewModel
     private lateinit var adapter: SensorPagerAdapter
     private lateinit var heartRateSensorManager: HeartRateSensorManager
+    private lateinit var gpsLocationManager: GpsLocationManager  // 📌 Aquí lo declaramos
 
     private val REQUIRED_PERMISSIONS = mutableListOf(
-        Manifest.permission.BODY_SENSORS
+        Manifest.permission.BODY_SENSORS,
+        Manifest.permission.ACCESS_FINE_LOCATION  // 📌 Agregar permiso de ubicación
     ).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.FOREGROUND_SERVICE_HEALTH)
@@ -38,16 +41,19 @@ class MainActivity : AppCompatActivity() {
         adapter = SensorPagerAdapter(this, emptyList())
         viewPager.adapter = adapter
 
-        // Observamos todos los sensores y actualizamos el ViewPager
+        // Observamos los sensores para actualizar el ViewPager
         viewModel.sensorData.observe(this) { newSensorData ->
             adapter.updateData(newSensorData)
         }
 
-        // Manejo del sensor desde el lifecycle
+        // Manejo de sensores: ritmo cardíaco y GPS
         heartRateSensorManager = HeartRateSensorManager(this, lifecycle, viewModel)
         lifecycle.addObserver(heartRateSensorManager)
 
-        // Verificar permisos antes de iniciar el servicio en segundo plano
+        gpsLocationManager = GpsLocationManager(this, lifecycle, viewModel)
+        lifecycle.addObserver(gpsLocationManager)  // 📌 Añadimos el observer de GPS
+
+        // Verificar permisos antes de iniciar servicios
         if (REQUIRED_PERMISSIONS.all {
                 ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
             }) {
