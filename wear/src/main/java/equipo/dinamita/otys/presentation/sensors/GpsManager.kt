@@ -3,15 +3,17 @@ package equipo.dinamita.otys.presentation.sensors
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.location.*
 import equipo.dinamita.otys.presentation.SensorViewModel
+import android.Manifest
+import android.content.pm.PackageManager
 
 class GpsLocationManager(
     private val context: Context,
-    private val lifecycle: Lifecycle,
+    private val lifecycle: androidx.lifecycle.Lifecycle,
     private val viewModel: SensorViewModel
 ) : DefaultLifecycleObserver {
 
@@ -20,34 +22,43 @@ class GpsLocationManager(
     private lateinit var locationCallback: LocationCallback
 
     override fun onResume(owner: LifecycleOwner) {
+        Log.d("GPS_LOCATION", "Intentando iniciar el servicio de ubicación...")
         startLocationUpdates()
-        Log.d("GPS_LOCATION", "Servicio de ubicación iniciado")
     }
 
     override fun onPause(owner: LifecycleOwner) {
+        Log.d("GPS_LOCATION", "Deteniendo servicio de ubicación")
         fusedLocationClient.removeLocationUpdates(locationCallback)
-        Log.d("GPS_LOCATION", "Servicio de ubicación detenido")
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-        locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY, 1000L
-        ).build()
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e("GPS_LOCATION", "Permiso de ubicación no concedido")
+            return
+        }
+
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+            .setMinUpdateIntervalMillis(3000L)
+            .build()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
+                Log.d("GPS_LOCATION", "Callback recibido")
+
                 val location = locationResult.lastLocation
-                location?.let {
-                    val lat = it.latitude
-                    val lon = it.longitude
-                    Log.d("GPS_LOCATION", "Ubicación: $lat, $lon")
+                if (location != null) {
+                    val lat = location.latitude
+                    val lon = location.longitude
+                    Log.d("GPS_LOCATION", "Ubicación recibida: $lat, $lon")
                     viewModel.updateSensor("GPS", "Lat: $lat, Lon: $lon")
+                } else {
+                    Log.w("GPS_LOCATION", "Ubicación nula")
                 }
             }
         }
 
-        // Asegúrate de haber pedido permisos ACCESS_FINE_LOCATION antes de llamar este método
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        Log.d("GPS_LOCATION", "Request de ubicación iniciado")
     }
 }

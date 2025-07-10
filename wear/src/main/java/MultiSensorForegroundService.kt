@@ -13,6 +13,9 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.google.android.gms.wearable.Wearable
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.tasks.Tasks
 
 class MultiSensorForegroundService : Service(), SensorEventListener {
 
@@ -22,6 +25,8 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
     private var accelerometerSensor: Sensor? = null
     private var gyroscopeSensor: Sensor? = null
     private var gravitySensor: Sensor? = null
+
+    private val PATH_SENSOR_DATA = "/sensor_data_path"
 
     override fun onCreate() {
         super.onCreate()
@@ -62,7 +67,13 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private var lastSentTime = 0L
+    private val sendIntervalMs = 1000L  // 1 segundo entre envíos
+
     override fun onSensorChanged(event: SensorEvent?) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastSentTime < sendIntervalMs) return
+
         event?.let {
             val sensorName = when (it.sensor.type) {
                 Sensor.TYPE_HEART_RATE -> "Ritmo Cardíaco"
@@ -72,12 +83,37 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
                 else -> "Desconocido"
             }
 
-            val data = it.values.joinToString(", ") { v -> "%.2f".format(v) }
-            Log.d("MultiSensorService", "$sensorName -> $data")
+            val data = when (it.sensor.type) {
+                Sensor.TYPE_HEART_RATE -> "${it.values[0].toInt()} bpm"
+                else -> it.values.joinToString(",") { v -> "%.2f".format(v) }
+            }
+
+            val message = "$sensorName:$data"
+            Log.d("MultiSensorService", "Preparando para enviar: $message")
+
+            sendDataToPhone(message)
+
+            lastSentTime = currentTime
         }
     }
 
+
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    private fun sendDataToPhone(message: String) {
+        val nodeListTask = Wearable.getNodeClient(this).connectedNodes
+        nodeListTask.addOnSuccessListener { nodes ->
+            for (node in nodes) {
+                Wearable.getMessageClient(this).sendMessage(node.id, PATH_SENSOR_DATA, message.toByteArray())
+                    .addOnSuccessListener {
+                        Log.d("WearDataLayer", "Enviado $message a ${node.displayName}")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("WearDataLayer", "Error enviando mensaje: ${e.message}")
+                    }
+            }
+        }
+    }
 
     private fun createNotification(): Notification {
         val channelId = "multi_sensor_channel"

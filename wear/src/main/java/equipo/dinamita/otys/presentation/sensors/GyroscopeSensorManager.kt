@@ -23,17 +23,17 @@ class GyroscopeSensorManager(
     override fun onResume(owner: LifecycleOwner) {
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         if (gyroscopeSensor == null) {
-            Log.e("MAIN_ACTIVITY", "⚠️ Sensor de giroscopio no disponible")
+//            Log.e("MAIN_ACTIVITY", "⚠️ Sensor de giroscopio no disponible")
             viewModel.updateSensor("Giroscopio", "No disponible")
             return
         }
         sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        Log.d("MAIN_ACTIVITY", "✅ Giroscopio registrado")
+//        Log.d("MAIN_ACTIVITY", "✅ Giroscopio registrado")
     }
 
     override fun onPause(owner: LifecycleOwner) {
         sensorManager.unregisterListener(this)
-        Log.d("MAIN_ACTIVITY", "⛔ Giroscopio desregistrado")
+//        Log.d("MAIN_ACTIVITY", "⛔ Giroscopio desregistrado")
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -43,7 +43,7 @@ class GyroscopeSensorManager(
                 val y = it.values[1]
                 val z = it.values[2]
                 val formatted = "x: %.2f, y: %.2f, z: %.2f rad/s".format(x, y, z)
-                Log.d("MAIN_ACTIVITY", "📦 Giroscopio -> $formatted")
+//                Log.d("MAIN_ACTIVITY", "📦 Giroscopio -> $formatted")
                 viewModel.updateSensor("Giroscopio", formatted)
             }
         }

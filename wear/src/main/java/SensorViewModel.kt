@@ -10,10 +10,8 @@ class SensorViewModel : ViewModel() {
         listOf(
             "Ritmo Cardíaco" to "-- bpm",
             "GPS" to "Lat: ---, Lon: ---",
-            "Estrés" to "Nivel: --",
             "Giroscopio" to "X: ---, Y: ---, Z: ---",
             "Acelerómetro" to "X: ---, Y: ---, Z: ---",
-            "Temperatura" to "-- °C"
         )
     )
     val sensorData: LiveData<List<Pair<String, String>>> = _sensorData
@@ -26,5 +24,15 @@ class SensorViewModel : ViewModel() {
 
     fun resetHeartRate() {
         updateSensor("Ritmo Cardíaco", "-- bpm")
+    }
+
+    // Nueva función para actualizar desde mensajes del wearable
+    fun updateSensorDataFromWearable(rawMessage: String) {
+        val parts = rawMessage.split(":", limit = 2)
+        if (parts.size == 2) {
+            val sensorName = parts[0]
+            val value = parts[1]
+            updateSensor(sensorName, value)
+        }
     }
 }
