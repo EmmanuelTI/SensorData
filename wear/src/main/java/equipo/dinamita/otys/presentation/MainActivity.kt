@@ -48,10 +48,23 @@ class MainActivity : AppCompatActivity(), MessageClient.OnMessageReceivedListene
         adapter = SensorPagerAdapter(this, emptyList())
         viewPager.adapter = adapter
 
-        // Observamos cambios para actualizar la UI
+
         viewModel.sensorData.observe(this) { newSensorData ->
             adapter.updateData(newSensorData)
+
+            // Agregamos log para cada valor recibido
+            newSensorData.forEach { (sensorName, sensorValue) ->
+                Log.d("SensorValue", "$sensorName: $sensorValue")
+            }
+
+            //LOG PARA MOSTRAR EL VALOR DE UN SOLO SENSOR
+            //newSensorData.forEach { (sensorName, sensorValue) ->
+            //    if (sensorName == "GPS") {
+            //        Log.d("SensorValue", "📍 GPS: $sensorValue")
+            //    }
+            //}
         }
+
 
         // Inicializamos managers sensores locales
         heartRateSensorManager = HeartRateSensorManager(this, lifecycle, viewModel)
