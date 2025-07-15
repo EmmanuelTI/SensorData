@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
+import equipo.dinamita.otys.data.SensorDatabaseHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,6 +18,8 @@ class MainActivity : AppCompatActivity() {
         SensorData("Acelerómetro", 0),
         SensorData("GPS",0)
     )
+
+    private lateinit var databaseHelper: SensorDatabaseHelper
 
     private lateinit var adapter: SensorPagerAdapter
     private lateinit var viewPager: ViewPager2
@@ -40,12 +43,19 @@ class MainActivity : AppCompatActivity() {
                 sensorsMutable[index] = sensorsMutable[index].copy(value = firstValue)
                 adapter.notifyItemChanged(index)
             }
+
+            // 👉 Guardar en base de datos
+            databaseHelper.insertSensorData(sensorName, firstValue)
+
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        //INICIALIZO
+        databaseHelper = SensorDatabaseHelper(this)
 
         adapter = SensorPagerAdapter(sensorsMutable)
         viewPager = findViewById(R.id.viewPagerSensors)
