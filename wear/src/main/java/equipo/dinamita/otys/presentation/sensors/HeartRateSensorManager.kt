@@ -41,7 +41,7 @@ class HeartRateSensorManager(
         event?.let {
             if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
                 val bpm = it.values[0].toInt()
-               Log.d("HEART_RATE", "Ritmo Cardíaco: $bpm bpm")
+             //  Log.d("HEART_RATE", "Ritmo Cardíaco: $bpm bpm")
                 viewModel.updateSensor("Ritmo Cardíaco", "$bpm bpm")
             }
         }
