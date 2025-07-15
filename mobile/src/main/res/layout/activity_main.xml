@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -19,6 +18,17 @@
         app:titleTextColor="#1A1A1A"
         app:navigationIcon="@drawable/ic_menu"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Contenedor para el mapa (invisible inicialmente) -->
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -70,6 +80,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:itemIconTint="@color/selector_nav_item_color"
         app:itemTextColor="@color/selector_nav_item_color" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -32,9 +32,18 @@ class SensorPagerAdapter(
 
     override fun onBindViewHolder(holder: SensorViewHolder, position: Int) {
         val sensor = sensors[position]
-        setupPieChart(holder.pieChart, sensor.value)
+
+        if (sensor.name == "GPS") {
+            holder.tvSensorValue.text = sensor.extra  // Mostrar coordenadas
+            setupPieChart(holder.pieChart, 0)         // PieChart vacío o fijo
+        } else {
+            holder.tvSensorValue.text = sensor.value.toString()
+            setupPieChart(holder.pieChart, sensor.value)
+        }
+
         holder.tvSensorName.text = sensor.name
     }
+
 
     override fun getItemCount(): Int = sensors.size
 
