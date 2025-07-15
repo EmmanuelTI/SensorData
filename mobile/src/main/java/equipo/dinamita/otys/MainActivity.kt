@@ -15,6 +15,7 @@ class MainActivity : AppCompatActivity() {
         SensorData("Ritmo Cardíaco", 0),
         SensorData("Giroscopio", 0),
         SensorData("Acelerómetro", 0),
+        SensorData("GPS",0)
     )
 
     private lateinit var adapter: SensorPagerAdapter
