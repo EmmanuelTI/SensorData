@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity(), MessageClient.OnMessageReceivedListene
 
             // Agregamos log para cada valor recibido
             newSensorData.forEach { (sensorName, sensorValue) ->
-                Log.d("SensorValue", "$sensorName: $sensorValue")
+                //Log.d("SensorValue", "$sensorName: $sensorValue")
             }
 
             //LOG PARA MOSTRAR EL VALOR DE UN SOLO SENSOR

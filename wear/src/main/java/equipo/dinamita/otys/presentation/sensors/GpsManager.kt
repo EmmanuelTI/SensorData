@@ -22,19 +22,19 @@ class GpsLocationManager(
     private lateinit var locationCallback: LocationCallback
 
     override fun onResume(owner: LifecycleOwner) {
-        Log.d("GPS_LOCATION", "Intentando iniciar el servicio de ubicación...")
+       // Log.d("GPS_LOCATION", "Intentando iniciar el servicio de ubicación...")
         startLocationUpdates()
     }
 
     override fun onPause(owner: LifecycleOwner) {
-        Log.d("GPS_LOCATION", "Deteniendo servicio de ubicación")
+        // Log.d("GPS_LOCATION", "Deteniendo servicio de ubicación")
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("GPS_LOCATION", "Permiso de ubicación no concedido")
+           // Log.e("GPS_LOCATION", "Permiso de ubicación no concedido")
             return
         }
 
@@ -44,21 +44,21 @@ class GpsLocationManager(
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                Log.d("GPS_LOCATION", "Callback recibido")
+               // Log.d("GPS_LOCATION", "Callback recibido")
 
                 val location = locationResult.lastLocation
                 if (location != null) {
                     val lat = location.latitude
                     val lon = location.longitude
-                    Log.d("GPS_LOCATION", "Ubicación recibida: $lat, $lon")
+                  //  Log.d("GPS_LOCATION", "Ubicación recibida: $lat, $lon")
                     viewModel.updateSensor("GPS", "Lat: $lat, Lon: $lon")
                 } else {
-                    Log.w("GPS_LOCATION", "Ubicación nula")
+                  //  Log.w("GPS_LOCATION", "Ubicación nula")
                 }
             }
         }
 
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-        Log.d("GPS_LOCATION", "Request de ubicación iniciado")
+        //Log.d("GPS_LOCATION", "Request de ubicación iniciado")
     }
 }

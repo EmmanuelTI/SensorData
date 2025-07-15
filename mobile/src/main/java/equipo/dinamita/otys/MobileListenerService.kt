@@ -16,9 +16,6 @@ class MobileListenerService : WearableListenerService() {
             val intent = Intent("SENSOR_DATA_UPDATE")
             intent.putExtra("sensorData", message)
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-        }git add .gitignore
-        git add wear/src/main/java/equipo/dinamita/otys/presentation/sensors/HeartRateSensorManager.kt
-        git add mobile/src/main/java/equipo/dinamita/otys/MobileListenerService.kt
-
+        }
     }
 }

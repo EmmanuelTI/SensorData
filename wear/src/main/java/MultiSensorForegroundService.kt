@@ -14,8 +14,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.wearable.Wearable
-import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.tasks.Tasks
 
 class MultiSensorForegroundService : Service(), SensorEventListener {
 
@@ -67,15 +65,20 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private var lastSentTime = 0L
-    private val sendIntervalMs = 1000L  // 1 segundo entre envíos
+    // Cambiado: guardamos el último tiempo enviado por cada tipo de sensor
+    private val lastSentTimes = mutableMapOf<Int, Long>()
+    private val sendIntervalMs = 1000L  // 1 segundo entre envíos por sensor
 
     override fun onSensorChanged(event: SensorEvent?) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastSentTime < sendIntervalMs) return
-
         event?.let {
-            val sensorName = when (it.sensor.type) {
+            val sensorType = it.sensor.type
+            val currentTime = System.currentTimeMillis()
+            val lastTime = lastSentTimes[sensorType] ?: 0L
+
+            // Solo enviamos si ha pasado el intervalo desde el último envío de este sensor
+            if (currentTime - lastTime < sendIntervalMs) return
+
+            val sensorName = when (sensorType) {
                 Sensor.TYPE_HEART_RATE -> "Ritmo Cardíaco"
                 Sensor.TYPE_ACCELEROMETER -> "Acelerómetro"
                 Sensor.TYPE_GYROSCOPE -> "Giroscopio"
@@ -83,7 +86,7 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
                 else -> "Desconocido"
             }
 
-            val data = when (it.sensor.type) {
+            val data = when (sensorType) {
                 Sensor.TYPE_HEART_RATE -> "${it.values[0].toInt()} bpm"
                 else -> it.values.joinToString(",") { v -> "%.2f".format(v) }
             }
@@ -93,10 +96,9 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
 
             sendDataToPhone(message)
 
-            lastSentTime = currentTime
+            lastSentTimes[sensorType] = currentTime
         }
     }
-
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 

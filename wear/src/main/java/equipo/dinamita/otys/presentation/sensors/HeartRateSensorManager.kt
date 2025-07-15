@@ -24,24 +24,24 @@ class HeartRateSensorManager(
     override fun onResume(owner: LifecycleOwner) {
         heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
         if (heartRateSensor == null) {
-            Log.e("HEART_RATE", "Sensor de ritmo cardíaco no disponible")
+           // Log.e("HEART_RATE", "Sensor de ritmo cardíaco no disponible")
             viewModel.resetHeartRate()  // Actualiza el valor a "-- bpm"
             return
         }
         sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        Log.d("HEART_RATE", "Sensor registrado")
+      //  Log.d("HEART_RATE", "Sensor registrado")
     }
 
     override fun onPause(owner: LifecycleOwner) {
         sensorManager.unregisterListener(this)
-        Log.d("HEART_RATE", "Sensor desregistrado")
+      //  Log.d("HEART_RATE", "Sensor desregistrado")
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
                 val bpm = it.values[0].toInt()
-                Log.d("HEART_RATE", "Ritmo Cardíaco: $bpm bpm")
+               Log.d("HEART_RATE", "Ritmo Cardíaco: $bpm bpm")
                 viewModel.updateSensor("Ritmo Cardíaco", "$bpm bpm")
             }
         }

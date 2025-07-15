@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_home"
+        android:title="Inicio" />
+    <item
+        android:id="@+id/navigation_notifications"
+        android:icon="@drawable/ic_notifications"
+        android:title="Notificaciones" />
+    <item
+        android:id="@+id/navigation_gps"
+        android:icon="@drawable/ic_gps"
+        android:title="GPS" />
+</menu>
