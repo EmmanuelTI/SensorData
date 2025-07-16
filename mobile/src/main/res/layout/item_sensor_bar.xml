@@ -7,19 +7,18 @@
     android:padding="24dp"
     android:background="@android:color/white">
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pieChart"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_gravity="center" />
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChart"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="16dp" />
 
     <TextView
-        android:id="@+id/tvSensorValue"
+        android:id="@+id/tvSensorXYZ"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:text="X: 0.0 Y: 0.0 Z: 0.0"
+        android:textSize="16sp"
         android:textColor="@android:color/black"
         android:layout_marginTop="16dp" />
 

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -19,15 +18,12 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import equipo.dinamita.otys.data.SensorDatabaseHelper
 
-
-
 class MainActivity : AppCompatActivity() {
 
     private val sensorsMutable = mutableListOf(
         SensorData("Ritmo Cardíaco", 0),
-        SensorData("Giroscopio", 0),
-        SensorData("Acelerómetro", 0),
-        SensorData("GPS", 0)
+        SensorData("Giroscopio", extra = ""),
+        SensorData("Acelerómetro", extra = "")
     )
 
     private lateinit var databaseHelper: SensorDatabaseHelper
@@ -38,8 +34,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mapContainer: FrameLayout
     private var mapView: MapView? = null
 
-    private var currentLatitude = 0.0
-    private var currentLongitude = 0.0
+    private var currentLatitude = 19.4326
+    private var currentLongitude = -99.1332
 
     private val sensorDataReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -58,16 +54,32 @@ class MainActivity : AppCompatActivity() {
                     currentLongitude = coords[1].toDoubleOrNull() ?: currentLongitude
                     updateMapLocation()
                 }
+                return // GPS no va en ViewPager
             }
 
-            val firstValue = valueStr.split(",")[0].toFloatOrNull()?.toInt() ?: 0
-            val index = sensorsMutable.indexOfFirst { it.name == sensorName }
-            if (index != -1) {
-                sensorsMutable[index] = sensorsMutable[index].copy(value = firstValue)
-                adapter.notifyItemChanged(index)
+            when (sensorName) {
+                "Giroscopio", "Acelerómetro" -> {
+                    val index = sensorsMutable.indexOfFirst { it.name == sensorName }
+                    if (index != -1) {
+                        sensorsMutable[index] = sensorsMutable[index].copy(extra = valueStr)
+                        adapter.notifyItemChanged(index)
+                    }
+                }
+                "Ritmo Cardíaco" -> {
+                    // Extraer solo número (por si viene con texto extra, ej: "72 bpm")
+                    val numberRegex = Regex("""\d+""")
+                    val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
+                    val index = sensorsMutable.indexOfFirst { it.name == sensorName }
+                    if (index != -1) {
+                        sensorsMutable[index] = sensorsMutable[index].copy(value = firstValue)
+                        adapter.notifyItemChanged(index)
+                    }
+                }
             }
 
-            // Guardar en base de datos
+            // Guardar en base de datos solo el número extraído
+            val numberRegex = Regex("""\d+""")
+            val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
             databaseHelper.insertSensorData(sensorName, firstValue)
         }
     }
@@ -75,16 +87,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configura osmdroid (obligatorio)
         Configuration.getInstance()
             .load(this, androidx.preference.PreferenceManager.getDefaultSharedPreferences(this))
 
         setContentView(R.layout.activity_main)
 
-        // Inicializar helper antes de usarlo
         databaseHelper = SensorDatabaseHelper(this)
-
-
 
         adapter = SensorPagerAdapter(sensorsMutable)
         viewPager = findViewById(R.id.viewPagerSensors)
@@ -101,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 else -> {
                     hideMap()
-                    false
+                    true
                 }
             }
         }
@@ -150,10 +158,8 @@ class MainActivity : AppCompatActivity() {
             val geoPoint = GeoPoint(currentLatitude, currentLongitude)
             map.controller.setCenter(geoPoint)
 
-            // Borra marcadores previos
             map.overlays.clear()
 
-            // Agrega marcador en la ubicación actual
             val marker = Marker(map)
             marker.position = geoPoint
             marker.title = "Última ubicación"

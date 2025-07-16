@@ -5,45 +5,73 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
-import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.data.PieData
-import com.github.mikephil.charting.data.PieDataSet
-import com.github.mikephil.charting.data.PieEntry
 import androidx.core.graphics.toColorInt
-
-
+import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
 class SensorPagerAdapter(
     private val sensors: List<SensorData>
-) : RecyclerView.Adapter<SensorPagerAdapter.SensorViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    inner class SensorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private val TYPE_PIE = 0
+    private val TYPE_BAR = 1
+
+    override fun getItemViewType(position: Int): Int {
+        val sensor = sensors[position]
+        return when (sensor.name.lowercase()) {
+            "ritmo cardíaco", "heart rate" -> TYPE_PIE
+            else -> TYPE_BAR
+        }
+    }
+
+    inner class PieChartViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val pieChart: PieChart = view.findViewById(R.id.pieChart)
         val tvSensorValue: TextView = view.findViewById(R.id.tvSensorValue)
         val tvSensorName: TextView = view.findViewById(R.id.tvSensorName)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SensorViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_sensor_chart, parent, false)
-        return SensorViewHolder(view)
+    inner class BarChartViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val barChart: BarChart = view.findViewById(R.id.barChart)
+        val tvSensorXYZ: TextView = view.findViewById(R.id.tvSensorXYZ)
+        val tvSensorName: TextView = view.findViewById(R.id.tvSensorName)
     }
 
-    override fun onBindViewHolder(holder: SensorViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        return if (viewType == TYPE_PIE) {
+            val view = inflater.inflate(R.layout.item_sensor_chart, parent, false)
+            PieChartViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.item_sensor_bar, parent, false)
+            BarChartViewHolder(view)
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val sensor = sensors[position]
 
-        if (sensor.name == "GPS") {
-            holder.tvSensorValue.text = sensor.extra  // Mostrar coordenadas
-            setupPieChart(holder.pieChart, 0)         // PieChart vacío o fijo
-        } else {
-            holder.tvSensorValue.text = sensor.value.toString()
-            setupPieChart(holder.pieChart, sensor.value)
+        when (holder) {
+            is PieChartViewHolder -> {
+                holder.tvSensorValue.text = sensor.value.toString()
+                holder.tvSensorName.text = sensor.name
+                setupPieChart(holder.pieChart, sensor.value)
+            }
+
+            is BarChartViewHolder -> {
+                // Simulación de valores X/Y/Z si vienen en `extra` separados por coma, como "1.2,0.4,9.8"
+                val (x, y, z) = sensor.extra.split(",").mapNotNull { it.toFloatOrNull() }
+                    .let { it + List(3 - it.size) { 0f } }  // Rellenar con ceros si faltan
+
+                holder.tvSensorXYZ.text = "X: %.2f  Y: %.2f  Z: %.2f".format(x, y, z)
+                holder.tvSensorName.text = sensor.name
+                setupBarChart(holder.barChart, x, y, z)
+            }
         }
-
-        holder.tvSensorName.text = sensor.name
     }
-
 
     override fun getItemCount(): Int = sensors.size
 
@@ -61,20 +89,47 @@ class SensorPagerAdapter(
         chart.legend.isEnabled = false
         chart.setTouchEnabled(false)
 
+        val entries = listOf(
+            PieEntry(value.toFloat()),
+            PieEntry((100 - value).coerceAtLeast(0).toFloat())
+        )
 
-        val entries = ArrayList<PieEntry>()
-        entries.add(PieEntry(value.toFloat()))
-        entries.add(PieEntry((100 - value).toFloat()))
+        val dataSet = PieDataSet(entries, "").apply {
+            setDrawValues(false)
+            colors = listOf("#3F51B5".toColorInt(), Color.LTGRAY)
+        }
 
-        val dataSet = PieDataSet(entries, "")
-        dataSet.setDrawValues(false)
-        dataSet.colors = listOf("#3F51B5".toColorInt(), Color.LTGRAY)
-
-        val data = PieData(dataSet)
-        chart.data = data
+        chart.data = PieData(dataSet)
         chart.invalidate()
-
     }
 
+    private fun setupBarChart(chart: BarChart, x: Float, y: Float, z: Float) {
+        val entries = listOf(
+            BarEntry(0f, x),
+            BarEntry(1f, y),
+            BarEntry(2f, z)
+        )
 
+        val dataSet = BarDataSet(entries, "Ejes XYZ").apply {
+            colors = listOf(Color.RED, Color.GREEN, Color.BLUE)
+            valueTextColor = Color.BLACK
+            valueTextSize = 14f
+        }
+
+        chart.apply {
+            data = BarData(dataSet)
+            description.isEnabled = false
+            legend.isEnabled = false
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                valueFormatter = IndexAxisValueFormatter(listOf("X", "Y", "Z"))
+                granularity = 1f
+                setDrawGridLines(false)
+            }
+            axisLeft.axisMinimum = -20f
+            axisRight.isEnabled = false
+            setTouchEnabled(false)
+            invalidate()
+        }
+    }
 }
