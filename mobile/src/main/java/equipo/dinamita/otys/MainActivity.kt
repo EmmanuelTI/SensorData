@@ -38,6 +38,30 @@ class MainActivity : AppCompatActivity() {
     private var currentLatitude = 19.4326
     private var currentLongitude = -99.1332
 
+    private val handler = android.os.Handler()
+    private val queryIntervalMs = 1 * 60 * 1000L // 5 minutos en milisegundos
+
+    private val periodicQueryRunnable = object : Runnable {
+        override fun run() {
+            // Aquí haces la consulta periódica
+            val allSensorData = databaseHelper.getAllSensorData()
+
+            // Limitar a 20 últimos registros (ya que tu query ordena por timestamp DESC)
+            val last20 = allSensorData.take(20)
+
+            Log.d("MainActivity", "Mostrando los últimos ${last20.size} registros:")
+
+            // Aquí puedes hacer algo con la lista, como actualizar UI, enviar a adapter, etc.
+
+            for (record in last20) {
+                Log.d("MainActivity", "ID: ${record.id}, Sensor: ${record.sensorName}, Valor: ${record.value}, Timestamp: ${record.timestamp}")
+            }
+
+            // Volver a ejecutar después del intervalo
+            handler.postDelayed(this, queryIntervalMs)
+        }
+    }
+
     private val sensorDataReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val data = intent?.getStringExtra("sensorData") ?: return
@@ -103,6 +127,9 @@ class MainActivity : AppCompatActivity() {
         databaseHelper = SensorDatabaseHelper(this)
         //Elimina todas las db existentes con sus journals conservando solo la db usada
         databaseHelper.deleteOtherDatabasesAndJournals()
+
+        // Iniciar la consulta periódica
+        handler.post(periodicQueryRunnable)
 
         adapter = SensorPagerAdapter(sensorsMutable)
         viewPager = findViewById(R.id.viewPagerSensors)

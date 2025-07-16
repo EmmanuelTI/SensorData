@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues
 import android.util.Log
+import equipo.dinamita.otys.dbsqlite.model.SensorRecord
 
 class SensorDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, "sensores.db", null, 1) {
 
@@ -82,4 +83,28 @@ class SensorDatabaseHelper(private val context: Context) : SQLiteOpenHelper(cont
         }
     }
 
+    //FUNCION PARA HACER UNA CONSULTA DE TODOS LOS REGISTROS DE LA TABLA
+    fun getAllSensorData(): List<SensorRecord> {
+        val sensorList = mutableListOf<SensorRecord>()
+        val db = readableDatabase
+        val cursor = db.query(
+            "sensor_data",
+            arrayOf("id", "sensor_name", "value", "timestamp"),
+            null, null, null, null,
+            "timestamp DESC" // ordenados del más nuevo al más viejo
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = it.getInt(it.getColumnIndexOrThrow("id"))
+                val sensorName = it.getString(it.getColumnIndexOrThrow("sensor_name"))
+                val value = it.getString(it.getColumnIndexOrThrow("value"))
+                val timestamp = it.getString(it.getColumnIndexOrThrow("timestamp"))
+
+                sensorList.add(SensorRecord(id, sensorName, value, timestamp))
+            }
+        }
+        db.close()
+        return sensorList
+    }
 }
