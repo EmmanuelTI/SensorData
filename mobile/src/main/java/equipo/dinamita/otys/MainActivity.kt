@@ -41,48 +41,54 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val data = intent?.getStringExtra("sensorData") ?: return
 
-            val parts = data.split(":")
-            if (parts.size != 2) return
+            // Dividir el mensaje completo en partes por ";"
+            val parts = data.split(";")
+            for (part in parts) {
+                val subParts = part.split(":")
+                if (subParts.size != 2) continue
 
-            val sensorName = parts[0]
-            val valueStr = parts[1]
+                val sensorName = subParts[0]
+                val valueStr = subParts[1]
 
-            if (sensorName == "GPS") {
-                val coords = valueStr.split(",")
-                if (coords.size == 2) {
-                    currentLatitude = coords[0].toDoubleOrNull() ?: currentLatitude
-                    currentLongitude = coords[1].toDoubleOrNull() ?: currentLongitude
-                    updateMapLocation()
+                if (sensorName == "GPS") {
+                    val coords = valueStr.split(",")
+                    if (coords.size == 2) {
+                        currentLatitude = coords[0].toDoubleOrNull() ?: currentLatitude
+                        currentLongitude = coords[1].toDoubleOrNull() ?: currentLongitude
+                        updateMapLocation()
+                    }
+                    continue // GPS no va en ViewPager
                 }
-                return // GPS no va en ViewPager
-            }
 
-            when (sensorName) {
-                "Giroscopio", "Acelerómetro" -> {
-                    val index = sensorsMutable.indexOfFirst { it.name == sensorName }
-                    if (index != -1) {
-                        sensorsMutable[index] = sensorsMutable[index].copy(extra = valueStr)
-                        adapter.notifyItemChanged(index)
+                when (sensorName) {
+                    "Giroscopio", "Acelerómetro" -> {
+                        val index = sensorsMutable.indexOfFirst { it.name == sensorName }
+                        if (index != -1) {
+                            sensorsMutable[index] = sensorsMutable[index].copy(extra = valueStr)
+                            adapter.notifyItemChanged(index)
+                        }
+                    }
+                    "Ritmo Cardíaco" -> {
+                        val numberRegex = Regex("""\d+""")
+                        val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
+                        val index = sensorsMutable.indexOfFirst { it.name == sensorName }
+                        if (index != -1) {
+                            sensorsMutable[index] = sensorsMutable[index].copy(value = firstValue)
+                            adapter.notifyItemChanged(index)
+                        }
                     }
                 }
-                "Ritmo Cardíaco" -> {
-                    // Extraer solo número (por si viene con texto extra, ej: "72 bpm")
+
+                // Opcional: guardar en base de datos solo el número extraído para Ritmo Cardíaco
+                if (sensorName == "Ritmo Cardíaco") {
                     val numberRegex = Regex("""\d+""")
                     val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
-                    val index = sensorsMutable.indexOfFirst { it.name == sensorName }
-                    if (index != -1) {
-                        sensorsMutable[index] = sensorsMutable[index].copy(value = firstValue)
-                        adapter.notifyItemChanged(index)
-                    }
+                    databaseHelper.insertSensorData(sensorName, firstValue)
                 }
             }
-
-            // Guardar en base de datos solo el número extraído
-            val numberRegex = Regex("""\d+""")
-            val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
-            databaseHelper.insertSensorData(sensorName, firstValue)
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
