@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -16,7 +17,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import equipo.dinamita.otys.data.SensorDatabaseHelper
+import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -78,13 +79,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-
-                // Opcional: guardar en base de datos solo el número extraído para Ritmo Cardíaco
-                if (sensorName == "Ritmo Cardíaco") {
-                    val numberRegex = Regex("""\d+""")
-                    val firstValue = numberRegex.find(valueStr)?.value?.toIntOrNull() ?: 0
-                    databaseHelper.insertSensorData(sensorName, firstValue)
-                }
+                // Guardar TODOS los sensores en la base de datos
+                databaseHelper.insertSensorData(sensorName, valueStr)
             }
         }
     }
@@ -93,12 +89,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Mostrar bases de datos existentes
+        val dbList = databaseList()
+        for (dbName in dbList) {
+            Log.d("DATABASES", "Base de datos encontrada: $dbName")
+        }
+
         Configuration.getInstance()
             .load(this, androidx.preference.PreferenceManager.getDefaultSharedPreferences(this))
 
         setContentView(R.layout.activity_main)
 
         databaseHelper = SensorDatabaseHelper(this)
+        //Elimina todas las db existentes con sus journals conservando solo la db usada
+        databaseHelper.deleteOtherDatabasesAndJournals()
 
         adapter = SensorPagerAdapter(sensorsMutable)
         viewPager = findViewById(R.id.viewPagerSensors)
