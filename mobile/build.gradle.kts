@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("com.google.gms.google-services") // 🔥 Añade el plugin de Google Services
 }
 
 android {
@@ -70,5 +71,14 @@ dependencies {
     implementation ("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
     implementation ("com.google.android.gms:play-services-wearable:18.0.0")
 
+    // Firebase BoM (Bill of Materials) - Maneja versiones compatibles automáticamente
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1")) // 🔥 Versión más reciente
+    implementation("com.google.firebase:firebase-analytics") // Si necesitas Analytics
+    implementation("com.google.firebase:firebase-firestore") // Si usas Firestore
+    implementation("com.google.firebase:firebase-auth") // Si necesitas autenticación
+    // Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx") // Para Kotlin
 
+    // Opcional: Si usas autenticación
+    //implementation("com.google.firebase:firebase-auth-ktx")
 }

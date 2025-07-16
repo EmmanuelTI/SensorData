@@ -18,6 +18,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
+import equipo_dinamita.otys.firebase.FirestoreManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,6 +29,8 @@ class MainActivity : AppCompatActivity() {
     )
 
     private lateinit var databaseHelper: SensorDatabaseHelper
+
+    private lateinit var firestoreManager: FirestoreManager
 
     private lateinit var adapter: SensorPagerAdapter
     private lateinit var viewPager: ViewPager2
@@ -50,7 +53,6 @@ class MainActivity : AppCompatActivity() {
             val last20 = allSensorData.take(20)
 
             Log.d("MainActivity", "Mostrando los últimos ${last20.size} registros:")
-
             // Aquí puedes hacer algo con la lista, como actualizar UI, enviar a adapter, etc.
 
             for (record in last20) {
@@ -127,6 +129,11 @@ class MainActivity : AppCompatActivity() {
         databaseHelper = SensorDatabaseHelper(this)
         //Elimina todas las db existentes con sus journals conservando solo la db usada
         databaseHelper.deleteOtherDatabasesAndJournals()
+
+        //Inicializa FirestoreManager
+        firestoreManager = FirestoreManager(this)
+        // Iniciar la subida inicial a Firestore
+        firestoreManager.uploadAllSensorDataToFirestore()
 
         // Iniciar la consulta periódica
         handler.post(periodicQueryRunnable)

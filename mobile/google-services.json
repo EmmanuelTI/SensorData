@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "370836999473",
+    "project_id": "sensors-data-34606",
+    "storage_bucket": "sensors-data-34606.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:370836999473:android:5cc9ab1866f6c567423410",
+        "android_client_info": {
+          "package_name": "equipo.dinamita.otys"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJIwI8mpZ0dhVNR8zDEqllK8YTav0HGfo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
