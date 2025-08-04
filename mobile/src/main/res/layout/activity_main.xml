@@ -16,7 +16,7 @@
         app:title="SensorsGrafs"
         app:titleCentered="true"
         app:titleTextColor="#1A1A1A"
-        app:navigationIcon="@drawable/ic_menu"
+        app:navigationIcon="@drawable/ic_person"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

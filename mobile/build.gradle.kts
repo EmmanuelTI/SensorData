@@ -79,6 +79,8 @@ dependencies {
     // Firestore
     implementation("com.google.firebase:firebase-firestore-ktx") // Para Kotlin
 
+    implementation ("com.google.android.material:material:1.11.0 ")// o versión actual
+
     // Opcional: Si usas autenticación
     //implementation("com.google.firebase:firebase-auth-ktx")
 }
