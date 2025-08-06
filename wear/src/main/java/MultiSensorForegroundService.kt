@@ -32,7 +32,7 @@ class MultiSensorForegroundService : Service(), SensorEventListener {
     private lateinit var locationCallback: LocationCallback
 
     private val lastSentTimes = mutableMapOf<String, Long>()
-    private val sendIntervalMs = 10000L
+    private val sendIntervalMs = 1000L
 
     private val PATH_SENSOR_DATA = "/sensor_data_path"
 

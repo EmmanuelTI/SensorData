@@ -25,6 +25,7 @@ class RegisterActivity : AppCompatActivity() {
         val edtEmail = findViewById<EditText>(R.id.edtEmailRegister)
         val edtPassword = findViewById<EditText>(R.id.edtPasswordRegister)
         val edtDate = findViewById<EditText>(R.id.edtDateRegister)
+        val edtEmergencyPhone = findViewById<EditText>(R.id.edtEmergencyPhone)
         val btnRegister = findViewById<Button>(R.id.btnRegister)
 
         // Selección de fecha
@@ -45,9 +46,15 @@ class RegisterActivity : AppCompatActivity() {
             val email = edtEmail.text.toString().trim()
             val password = edtPassword.text.toString().trim()
             val birthDate = edtDate.text.toString().trim()
+            val phoneEmergency = edtEmergencyPhone.text.toString().trim() // NUEVO
 
-            if (username.isEmpty() || email.isEmpty() || password.isEmpty() || birthDate.isEmpty()) {
-                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+            if (username.isEmpty() || email.isEmpty() || password.isEmpty() || birthDate.isEmpty() || phoneEmergency.isEmpty()) {
+                Toast.makeText(this, "Completa todos los campos, incluido teléfono de emergencia", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (password.length < 6) {
+                Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -57,16 +64,15 @@ class RegisterActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                        // Guardar datos adicionales en Firestore
                         val userMap = hashMapOf(
                             "name" to username,
                             "email" to email,
                             "birthdate" to birthDate,
-                            "password" to password, // ⚠ Solo para pruebas, no en producción
+                            "numeroTelefono" to phoneEmergency,
                             "createdAt" to FieldValue.serverTimestamp()
                         )
 
-                        firestore.collection("users").document(userId)
+                        firestore.collection("usuarios").document(userId)
                             .set(userMap)
                             .addOnSuccessListener {
                                 Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show()

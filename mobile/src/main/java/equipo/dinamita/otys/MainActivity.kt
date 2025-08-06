@@ -19,6 +19,9 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
 import equipo_dinamita.otys.firebase.FirestoreManager
+import equipo.dinamita.otys.presentation.alert.EmergencyDetector
+import android.widget.Toast
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private lateinit var topAppBar: MaterialToolbar
+
+    private lateinit var emergencyDetector: EmergencyDetector
 
     private val periodicQueryRunnable = object : Runnable {
         override fun run() {
@@ -87,10 +92,13 @@ class MainActivity : AppCompatActivity() {
                         if (index != -1) {
                             sensorsMutable[index] = sensorsMutable[index].copy(value = value)
                             adapter.notifyItemChanged(index)
+
+                            emergencyDetector.processHeartRate(value.toFloat())
                         }
                     }
                 }
 
+                // Guarda solo en la base de datos local SQLite
                 databaseHelper.insertSensorData(sensorName, valueStr)
             }
         }
@@ -105,18 +113,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         topAppBar = findViewById(R.id.topAppBar)
-
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
         cargarNombreUsuario()
-
         setupTopAppBar()
 
         databaseHelper = SensorDatabaseHelper(this)
         databaseHelper.deleteOtherDatabasesAndJournals()
 
         firestoreManager = FirestoreManager(this)
+
+        emergencyDetector = EmergencyDetector(this)
 
         if (isUserLoggedIn()) {
             firestoreManager.uploadAllSensorDataToFirestore()
@@ -154,11 +162,7 @@ class MainActivity : AppCompatActivity() {
                 .addOnSuccessListener { document ->
                     if (document != null && document.exists()) {
                         val name = document.getString("name")
-                        if (!name.isNullOrEmpty()) {
-                            topAppBar.title = "Hola, $name"
-                        } else {
-                            topAppBar.title = "Hola, usuario"
-                        }
+                        topAppBar.title = if (!name.isNullOrEmpty()) "Hola, $name" else "Hola, usuario"
                     } else {
                         topAppBar.title = "Hola, usuario"
                     }
@@ -193,21 +197,26 @@ class MainActivity : AppCompatActivity() {
                     }
                     R.id.menu_logout -> {
                         FirebaseAuth.getInstance().signOut()
-                        recreate() // recargar la actividad para ocultar/mostrar opciones
+                        updateUIForLoggedOutUser()
                         true
                     }
+
+
                     else -> false
                 }
             }
             popupMenu.show()
         }
     }
-
+    private fun updateUIForLoggedOutUser() {
+        topAppBar.title = "Bienvenido"
+        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+        // Oculta botones o funcionalidades que requieran login, si es necesario
+    }
 
     private fun isUserLoggedIn(): Boolean {
         return FirebaseAuth.getInstance().currentUser != null
     }
-
 
     override fun onResume() {
         super.onResume()
