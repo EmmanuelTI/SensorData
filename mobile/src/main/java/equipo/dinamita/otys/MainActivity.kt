@@ -5,23 +5,23 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
+import equipo.dinamita.otys.dbsqlite.model.SensorRecord
+import equipo.dinamita.otys.presentation.alert.EmergencyDetector
+import equipo_dinamita.otys.firebase.FirestoreManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
-import equipo_dinamita.otys.firebase.FirestoreManager
-import equipo.dinamita.otys.presentation.alert.EmergencyDetector
-import android.widget.Toast
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,14 +42,13 @@ class MainActivity : AppCompatActivity() {
     private var currentLatitude = 19.4326
     private var currentLongitude = -99.1332
 
-    private val handler = android.os.Handler()
-    private val queryIntervalMs = 1 * 60 * 1000L
-
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private lateinit var topAppBar: MaterialToolbar
-
     private lateinit var emergencyDetector: EmergencyDetector
+
+    private val handler = android.os.Handler()
+    private val queryIntervalMs = 1 * 60 * 1000L
 
     private val periodicQueryRunnable = object : Runnable {
         override fun run() {
@@ -98,11 +97,23 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // Guarda solo en la base de datos local SQLite
+                // Insertar en SQLite
                 databaseHelper.insertSensorData(sensorName, valueStr)
+
+                // Crear un objeto SensorRecord para subirlo a Firestore
+                val newRecord = SensorRecord(
+                    id = 0, // id no usado para Firestore
+                    sensorName = sensorName,
+                    value = valueStr,
+                    timestamp = System.currentTimeMillis().toString()
+                )
+
+                // Subir dato con ubicación actual
+                firestoreManager.uploadRecordWithLocation(newRecord, currentLatitude, currentLongitude)
             }
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,15 +127,13 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
-        cargarNombreUsuario()
-        setupTopAppBar()
-
         databaseHelper = SensorDatabaseHelper(this)
         databaseHelper.deleteOtherDatabasesAndJournals()
-
         firestoreManager = FirestoreManager(this)
-
         emergencyDetector = EmergencyDetector(this)
+
+        setupTopAppBar()
+        cargarNombreUsuario()
 
         if (isUserLoggedIn()) {
             firestoreManager.uploadAllSensorDataToFirestore()
@@ -156,20 +165,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun cargarNombreUsuario() {
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            firestore.collection("users").document(userId).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        val name = document.getString("name")
-                        topAppBar.title = if (!name.isNullOrEmpty()) "Hola, $name" else "Hola, usuario"
-                    } else {
-                        topAppBar.title = "Hola, usuario"
-                    }
-                }
-                .addOnFailureListener {
-                    topAppBar.title = "Hola, usuario"
-                }
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            Log.d("MainActivity", "UID actual: ${currentUser.uid}")
+            topAppBar.title = "Hola, ${currentUser.displayName ?: "usuario"}"
         } else {
             topAppBar.title = "Bienvenido"
         }
@@ -197,21 +196,19 @@ class MainActivity : AppCompatActivity() {
                     }
                     R.id.menu_logout -> {
                         FirebaseAuth.getInstance().signOut()
-                        updateUIForLoggedOutUser()
+                        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+
+                        val intent = Intent(this, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
                         true
                     }
-
-
                     else -> false
                 }
             }
             popupMenu.show()
         }
-    }
-    private fun updateUIForLoggedOutUser() {
-        topAppBar.title = "Bienvenido"
-        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show()
-        // Oculta botones o funcionalidades que requieran login, si es necesario
     }
 
     private fun isUserLoggedIn(): Boolean {
