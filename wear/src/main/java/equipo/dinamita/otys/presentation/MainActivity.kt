@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
@@ -119,10 +120,16 @@ class MainActivity : AppCompatActivity(), MessageClient.OnMessageReceivedListene
         if (messageEvent.path == "/sensor_data_path") {
             val msg = String(messageEvent.data)
             Log.d("MobileListener", "Mensaje recibido: $msg")
+
+            // Enviar broadcast local con el mensaje para que lo reciba el BroadcastReceiver del mobile
+            val intent = Intent("SENSOR_DATA_UPDATE")
+            intent.putExtra("sensorData", msg)
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+
             runOnUiThread {
-                // Actualizar ViewModel para reflejar en UI
                 viewModel.updateSensorDataFromWearable(msg)
             }
         }
     }
+
 }
