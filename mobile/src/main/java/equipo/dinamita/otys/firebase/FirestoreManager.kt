@@ -27,6 +27,14 @@ class FirestoreManager(private val context: Context) {
         try {
             val sensorRecords = sqliteHelper.getAllSensorData()
 
+            if (sensorRecords.isEmpty()) {
+                Log.d("FirestoreManager", "No hay datos que subir")
+                return
+            }
+
+            var successCount = 0
+            val totalRecords = sensorRecords.size
+
             sensorRecords.forEach { record ->
                 val firestoreRecord = hashMapOf(
                     "sensorName" to record.sensorName,
@@ -39,8 +47,15 @@ class FirestoreManager(private val context: Context) {
                     .document(user.uid)
                     .collection(sensorDataSubcollection)
                     .add(firestoreRecord)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d("FirestoreManager", "Documento añadido con ID: ${documentReference.id}")
+                    .addOnSuccessListener {
+                        successCount++
+                        Log.d("FirestoreManager", "Dato subido correctamente")
+
+                        // Si todos los registros ya se subieron
+                        if (successCount == totalRecords) {
+                            sqliteHelper.deleteAllSensorData()
+                            Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
+                        }
                     }
                     .addOnFailureListener { e ->
                         Log.w("FirestoreManager", "Error añadiendo documento", e)
@@ -50,6 +65,7 @@ class FirestoreManager(private val context: Context) {
             Log.e("FirestoreManager", "Error al subir datos a Firestore", e)
         }
     }
+
 
     fun uploadSingleRecordToFirestore(record: SensorRecord) {
         val user = FirebaseAuth.getInstance().currentUser

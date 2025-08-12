@@ -107,4 +107,18 @@ class SensorDatabaseHelper(private val context: Context) : SQLiteOpenHelper(cont
         db.close()
         return sensorList
     }
+
+    // Método para eliminar todos los registros de la tabla sensor_data
+    fun deleteAllSensorData() {
+        val db = writableDatabase
+        try {
+            val deletedRows = db.delete("sensor_data", null, null)
+            Log.d(TAG, "Se eliminaron $deletedRows registros de sensor_data")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al eliminar registros de sensor_data", e)
+        } finally {
+            db.close()
+        }
+    }
+
 }

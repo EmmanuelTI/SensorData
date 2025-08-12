@@ -1,6 +1,7 @@
 package equipo.dinamita.otys
 
 import android.content.*
+import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +14,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import equipo.dinamita.otys.InternetConnection.InternetUtil
 import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
 import equipo.dinamita.otys.dbsqlite.model.SensorRecord
 import equipo.dinamita.otys.presentation.alert.EmergencyDetector
@@ -53,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     private val periodicQueryRunnable = object : Runnable {
         override fun run() {
             val last20 = databaseHelper.getAllSensorData().take(20)
+            val numero_data_database = databaseHelper.getAllSensorData()
+            Log.d("MainActivity", "Cantidad de registros en la db: ${numero_data_database.size}")
             Log.d("MainActivity", "Últimos ${last20.size} registros:")
             last20.forEach {
                 Log.d("MainActivity", "ID: ${it.id}, Sensor: ${it.sensorName}, Valor: ${it.value}, Timestamp: ${it.timestamp}")
@@ -97,19 +101,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // Insertar en SQLite
-                databaseHelper.insertSensorData(sensorName, valueStr)
-
-                // Crear un objeto SensorRecord para subirlo a Firestore
-                val newRecord = SensorRecord(
-                    id = 0, // id no usado para Firestore
-                    sensorName = sensorName,
-                    value = valueStr,
-                    timestamp = System.currentTimeMillis().toString()
-                )
-
-                // Subir dato con ubicación actual
-                firestoreManager.uploadRecordWithLocation(newRecord, currentLatitude, currentLongitude)
+                if (InternetUtil.isInternetAvailable(context)) {
+                    // Crear un objeto SensorRecord para subirlo a Firestore
+                    val newRecord = SensorRecord(
+                        id = 0, // id no usado para Firestore
+                        sensorName = sensorName,
+                        value = valueStr,
+                        timestamp = System.currentTimeMillis().toString()
+                    )
+                    // Subir dato con ubicación actual
+                    firestoreManager.uploadRecordWithLocation(newRecord, currentLatitude, currentLongitude)
+                } else {
+                    // Insertar en SQLite si no hay internet
+                    databaseHelper.insertSensorData(sensorName, valueStr)
+                }
             }
         }
     }
