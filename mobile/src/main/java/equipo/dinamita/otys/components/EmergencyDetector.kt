@@ -1,10 +1,16 @@
 package equipo.dinamita.otys.components
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.math.sqrt
@@ -15,7 +21,6 @@ class EmergencyDetector(private val context: Context) {
     private var lastEmergencySentTime = 0L
     private val EMERGENCY_COOLDOWN_MS = 5 * 60 * 1000L // 5 minutos cooldown
 
-
     private val HEART_RATE_THRESHOLD = 80f
     private val HEART_RATE_JUMP = 10f
     private val MOVEMENT_THRESHOLD = 10f
@@ -23,24 +28,57 @@ class EmergencyDetector(private val context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    // Variable para guardar la última ubicación conocida
+    // Última ubicación conocida (latitud, longitud)
     var currentLocation: Pair<Double, Double>? = null
 
     /**
-     * Procesa el ritmo cardíaco y detecta subidas bruscas.
+     * Actualiza la ubicación usando LocationManager sin Google Play Services
      */
+    @SuppressLint("MissingPermission")
+    fun updateLocation() {
+        if (!hasLocationPermission()) {
+            Log.e("EmergencyDetector", "Permisos de ubicación no concedidos")
+            return
+        }
+
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val providers = locationManager.getProviders(true)
+
+        var bestLocation: Location? = null
+        for (provider in providers) {
+            val location = locationManager.getLastKnownLocation(provider)
+            if (location != null) {
+                if (bestLocation == null || location.accuracy < bestLocation.accuracy) {
+                    bestLocation = location
+                }
+            }
+        }
+
+        if (bestLocation != null) {
+            currentLocation = Pair(bestLocation.latitude, bestLocation.longitude)
+            Log.d("EmergencyDetector", "Ubicación actualizada: $currentLocation")
+        } else {
+            Log.e("EmergencyDetector", "No se pudo obtener ubicación")
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun processHeartRate(currentRate: Float) {
         val currentTime = System.currentTimeMillis()
 
         if (lastHeartRate > 0 &&
             currentRate >= HEART_RATE_THRESHOLD &&
             (currentRate - lastHeartRate) >= HEART_RATE_JUMP &&
-            (currentTime - lastHeartRateTime) < 10000) { // 5 segundos
+            (currentTime - lastHeartRateTime) < 10000) {
 
-            // Verifica cooldown para evitar enviar mensajes muy seguidos
             if (currentTime - lastEmergencySentTime > EMERGENCY_COOLDOWN_MS) {
                 Log.d("EmergencyDetector", "Subida brusca de ritmo: $lastHeartRate -> $currentRate")
-                triggerEmergency(currentRate, currentLocation) // Usa la ubicación guardada
+                updateLocation()  // Actualiza ubicación antes de enviar emergencia
+                triggerEmergency(currentRate, currentLocation)
                 lastEmergencySentTime = currentTime
             } else {
                 Log.d("EmergencyDetector", "Alerta ignorada por cooldown")
@@ -51,24 +89,15 @@ class EmergencyDetector(private val context: Context) {
         lastHeartRateTime = currentTime
     }
 
-    /**
-     * Procesa valores de acelerómetro y giroscopio para detectar movimientos bruscos.
-     */
     fun processMovement(accValues: FloatArray, gyroValues: FloatArray) {
         val accMagnitude = sqrt(accValues.map { it * it }.sum())
         val gyroMagnitude = sqrt(gyroValues.map { it * it }.sum())
 
         if (accMagnitude > MOVEMENT_THRESHOLD || gyroMagnitude > MOVEMENT_THRESHOLD) {
             Log.d("EmergencyDetector", "Movimiento brusco detectado - Acc: $accMagnitude, Giro: $gyroMagnitude")
-            // Aquí podrías llamar triggerEmergency o manejar patrones para evitar falsos positivos
         }
     }
 
-    /**
-     * Dispara la emergencia: obtiene el número de teléfono desde Firestore y envía mensaje WhatsApp.
-     * @param currentHeartRate El ritmo cardíaco actual detectado.
-     * @param location Par(latitud, longitud) o null si no disponible.
-     */
     fun triggerEmergency(currentHeartRate: Float, location: Pair<Double, Double>?) {
         val currentUser = auth.currentUser
         if (currentUser == null) {

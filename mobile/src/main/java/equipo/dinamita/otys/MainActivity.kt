@@ -23,6 +23,10 @@ import equipo.dinamita.otys.sensors.SensorDataReceiver
 import equipo.dinamita.otys.ui.UserMenuManager
 import equipo_dinamita.otys.firebase.FirestoreManager
 import org.osmdroid.config.Configuration
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -65,6 +69,39 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "ID: ${it.id}, Sensor: ${it.sensorName}, Valor: ${it.value}, Timestamp: ${it.timestamp}")
             }
             handler.postDelayed(this, queryIntervalMs)
+        }
+    }
+    // Lanzador para pedir permisos
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (fineLocationGranted || coarseLocationGranted) {
+            Log.d("MainActivity", "Permiso de ubicación concedido")
+            // Aquí puedes iniciar procesos que requieran ubicación
+        } else {
+            Log.d("MainActivity", "Permiso de ubicación DENEGADO")
+            // Aquí puedes mostrar mensaje o deshabilitar funciones que requieren ubicación
+        }
+    }
+    private fun checkAndRequestLocationPermissions() {
+        val fineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarseLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
+            coarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
+            Log.d("MainActivity", "Permisos de ubicación ya concedidos")
+            // Ya tienes permiso, sigue con lo que necesites
+        } else {
+            // Solicitar permisos
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
@@ -180,6 +217,7 @@ class MainActivity : AppCompatActivity() {
 
         // Iniciar tareas periódicas
         handler.post(periodicQueryRunnable)
+        checkAndRequestLocationPermissions()
     }
 
     private fun cargarNombreUsuario() {
