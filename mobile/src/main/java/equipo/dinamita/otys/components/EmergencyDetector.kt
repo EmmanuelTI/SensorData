@@ -10,13 +10,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.math.sqrt
 
 class EmergencyDetector(private val context: Context) {
-
     private var lastHeartRate = 0f
     private var lastHeartRateTime = 0L
+    private var lastEmergencySentTime = 0L
+    private val EMERGENCY_COOLDOWN_MS = 5 * 60 * 1000L // 5 minutos cooldown
 
-    private val HEART_RATE_THRESHOLD = 100f
-    private val HEART_RATE_JUMP = 20f
-    private val MOVEMENT_THRESHOLD = 15f // Ajustar según pruebas
+
+    private val HEART_RATE_THRESHOLD = 80f
+    private val HEART_RATE_JUMP = 10f
+    private val MOVEMENT_THRESHOLD = 10f
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -33,10 +35,16 @@ class EmergencyDetector(private val context: Context) {
         if (lastHeartRate > 0 &&
             currentRate >= HEART_RATE_THRESHOLD &&
             (currentRate - lastHeartRate) >= HEART_RATE_JUMP &&
-            (currentTime - lastHeartRateTime) < 5000) { // 5 segundos
+            (currentTime - lastHeartRateTime) < 10000) { // 5 segundos
 
-            Log.d("EmergencyDetector", "Subida brusca de ritmo: $lastHeartRate -> $currentRate")
-            triggerEmergency(currentRate, currentLocation) // Usa la ubicación guardada
+            // Verifica cooldown para evitar enviar mensajes muy seguidos
+            if (currentTime - lastEmergencySentTime > EMERGENCY_COOLDOWN_MS) {
+                Log.d("EmergencyDetector", "Subida brusca de ritmo: $lastHeartRate -> $currentRate")
+                triggerEmergency(currentRate, currentLocation) // Usa la ubicación guardada
+                lastEmergencySentTime = currentTime
+            } else {
+                Log.d("EmergencyDetector", "Alerta ignorada por cooldown")
+            }
         }
 
         lastHeartRate = currentRate
