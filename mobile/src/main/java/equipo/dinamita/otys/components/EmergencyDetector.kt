@@ -14,12 +14,15 @@ class EmergencyDetector(private val context: Context) {
     private var lastHeartRate = 0f
     private var lastHeartRateTime = 0L
 
-    private val HEART_RATE_THRESHOLD = 130f
-    private val HEART_RATE_JUMP = 40f
+    private val HEART_RATE_THRESHOLD = 100f
+    private val HEART_RATE_JUMP = 20f
     private val MOVEMENT_THRESHOLD = 15f // Ajustar según pruebas
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
+    // Variable para guardar la última ubicación conocida
+    var currentLocation: Pair<Double, Double>? = null
 
     /**
      * Procesa el ritmo cardíaco y detecta subidas bruscas.
@@ -33,7 +36,7 @@ class EmergencyDetector(private val context: Context) {
             (currentTime - lastHeartRateTime) < 5000) { // 5 segundos
 
             Log.d("EmergencyDetector", "Subida brusca de ritmo: $lastHeartRate -> $currentRate")
-            triggerEmergency(currentRate, null) // Ubicación puede pasarse después
+            triggerEmergency(currentRate, currentLocation) // Usa la ubicación guardada
         }
 
         lastHeartRate = currentRate

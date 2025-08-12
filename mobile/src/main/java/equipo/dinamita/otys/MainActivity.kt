@@ -118,7 +118,6 @@ class MainActivity : AppCompatActivity() {
         // SensorDataReceiver: define lambdas for handling sensor data and GPS updates
         sensorDataReceiver = SensorDataReceiver(
             onSensorDataReceived = { sensorName, valueStr ->
-                // Actualiza lista y UI
                 when (sensorName) {
                     "Giroscopio", "Acelerómetro" -> {
                         val index = sensorsMutable.indexOfFirst { it.name == sensorName }
@@ -137,7 +136,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                // Guardar en base de datos o subir a Firestore
+
+                // Guardar en base de datos o subir a Firestore, enviando la ubicación actual
                 if (InternetUtil.isInternetAvailable(this)) {
                     val record = SensorRecord(
                         id = 0,
@@ -153,7 +153,9 @@ class MainActivity : AppCompatActivity() {
             onGpsDataReceived = { lat, lon ->
                 currentLatitude = lat
                 currentLongitude = lon
-                mapController.updateMapLocation(currentLatitude, currentLongitude)
+                emergencyDetector.currentLocation = Pair(lat, lon)
+                mapController.updateMapLocation(lat, lon)
+
             }
         )
 
