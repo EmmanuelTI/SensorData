@@ -1,4 +1,4 @@
-package equipo.dinamita.otys
+package equipo.dinamita.otys.adapters
 
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -12,6 +12,8 @@ import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import equipo.dinamita.otys.R
+import equipo.dinamita.otys.data.SensorData
 
 class SensorPagerAdapter(
     private val sensors: List<SensorData>

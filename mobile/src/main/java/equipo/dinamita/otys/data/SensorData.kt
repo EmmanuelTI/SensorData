@@ -1,4 +1,4 @@
-package equipo.dinamita.otys
+package equipo.dinamita.otys.data
 
 data class SensorData(
     val name: String,

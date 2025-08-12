@@ -6,7 +6,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import equipo.dinamita.otys.dbsqlite.SensorDatabaseHelper
 import equipo.dinamita.otys.dbsqlite.model.SensorRecord
-import equipo_dinamita.otys.firebase.models.FirestoreSensorRecord
 
 class FirestoreManager(private val context: Context) {
     private val db = FirebaseFirestore.getInstance()
@@ -22,8 +21,6 @@ class FirestoreManager(private val context: Context) {
             return
         }
 
-        val displayName = user.displayName ?: "desconocido"
-
         try {
             val sensorRecords = sqliteHelper.getAllSensorData()
 
@@ -34,38 +31,51 @@ class FirestoreManager(private val context: Context) {
 
             var successCount = 0
             val totalRecords = sensorRecords.size
+            var lastValueBySensor = mutableMapOf<String, Any?>()
 
             sensorRecords.forEach { record ->
-                val firestoreRecord = hashMapOf(
-                    "sensorName" to record.sensorName,
-                    "value" to record.value,
-                    "timestamp" to record.timestamp,
-                    "nombreUsuario" to displayName
-                )
+                // Verificar si el valor actual es distinto al último valor guardado para ese sensor
+                val lastValue = lastValueBySensor[record.sensorName]
+                if (lastValue != record.value) {
+                    val firestoreRecord = hashMapOf(
+                        "sensorName" to record.sensorName,
+                        "value" to record.value,
+                        "timestamp" to record.timestamp
+                    )
 
-                db.collection(usersCollection)
-                    .document(user.uid)
-                    .collection(sensorDataSubcollection)
-                    .add(firestoreRecord)
-                    .addOnSuccessListener {
-                        successCount++
-                        Log.d("FirestoreManager", "Dato subido correctamente")
+                    db.collection(usersCollection)
+                        .document(user.uid)
+                        .collection(sensorDataSubcollection)
+                        .add(firestoreRecord)
+                        .addOnSuccessListener {
+                            successCount++
+                            Log.d("FirestoreManager", "Dato subido correctamente")
 
-                        // Si todos los registros ya se subieron
-                        if (successCount == totalRecords) {
-                            sqliteHelper.deleteAllSensorData()
-                            Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
+                            if (successCount == totalRecords) {
+                                sqliteHelper.deleteAllSensorData()
+                                Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
+                            }
                         }
+                        .addOnFailureListener { e ->
+                            Log.w("FirestoreManager", "Error añadiendo documento", e)
+                        }
+
+                    // Actualizar el último valor guardado para este sensor
+                    lastValueBySensor[record.sensorName] = record.value
+                } else {
+                    Log.d("FirestoreManager", "Dato repetido para sensor ${record.sensorName}, no se sube")
+                    // Contar también este como "procesado" para no bloquear el borrado local
+                    successCount++
+                    if (successCount == totalRecords) {
+                        sqliteHelper.deleteAllSensorData()
+                        Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
                     }
-                    .addOnFailureListener { e ->
-                        Log.w("FirestoreManager", "Error añadiendo documento", e)
-                    }
+                }
             }
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Error al subir datos a Firestore", e)
         }
     }
-
 
     fun uploadSingleRecordToFirestore(record: SensorRecord) {
         val user = FirebaseAuth.getInstance().currentUser
@@ -74,13 +84,10 @@ class FirestoreManager(private val context: Context) {
             return
         }
 
-        val displayName = user.displayName ?: "desconocido"
-
         val firestoreRecord = hashMapOf(
             "sensorName" to record.sensorName,
             "value" to record.value,
-            "timestamp" to record.timestamp,
-            "nombreUsuario" to displayName
+            "timestamp" to record.timestamp
         )
 
         db.collection(usersCollection)
@@ -106,15 +113,12 @@ class FirestoreManager(private val context: Context) {
             return
         }
 
-        val displayName = user.displayName ?: "desconocido"
-
         val dataMap = hashMapOf<String, Any>(
             "sensorName" to record.sensorName,
             "value" to record.value,
             "timestamp" to record.timestamp,
             "latitude" to latitude,
-            "longitude" to longitude,
-            "nombreUsuario" to displayName
+            "longitude" to longitude
         )
 
         db.collection(usersCollection)

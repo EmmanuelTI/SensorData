@@ -1,4 +1,4 @@
-package equipo.dinamita.otys
+package equipo.dinamita.otys.services
 
 import android.content.Intent
 import android.util.Log

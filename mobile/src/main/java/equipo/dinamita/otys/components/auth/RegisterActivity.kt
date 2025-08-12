@@ -1,4 +1,4 @@
-package equipo.dinamita.otys
+package equipo.dinamita.otys.components.auth
 
 import android.app.DatePickerDialog
 import android.os.Bundle
@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
+import equipo.dinamita.otys.R
 import java.util.*
 
 class RegisterActivity : AppCompatActivity() {

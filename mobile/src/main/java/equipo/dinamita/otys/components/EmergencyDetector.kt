@@ -1,4 +1,4 @@
-package equipo.dinamita.otys.presentation.alert
+package equipo.dinamita.otys.components
 
 import android.content.Context
 import android.content.Intent
