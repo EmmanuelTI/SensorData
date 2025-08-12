@@ -1,4 +1,5 @@
 package equipo.dinamita.otys
+import android.content.Intent
 
 import android.content.IntentFilter
 import android.os.Bundle
@@ -27,7 +28,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 class MainActivity : AppCompatActivity() {
 
     private val sensorsMutable = mutableListOf(
@@ -228,18 +231,32 @@ class MainActivity : AppCompatActivity() {
             "Bienvenido"
         }
     }
+    private val messageListener = MessageClient.OnMessageReceivedListener { messageEvent ->
+        if (messageEvent.path == "/sensor_data_path") {
+            val message = String(messageEvent.data)
+            Log.d("MainActivity", "Mensaje recibido del wearable: $message")
+
+            // Aquí puedes reenviar el mensaje a tu SensorDataReceiver o procesarlo directamente
+            // Por ejemplo, simular broadcast local:
+            runOnUiThread {
+                // Reutiliza tu código de procesamiento en sensorDataReceiver
+                val intent = Intent("SENSOR_DATA_UPDATE")
+                intent.putExtra("sensorData", message)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+            }
+        }
+    }
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this).registerReceiver(sensorDataReceiver, IntentFilter("SENSOR_DATA_UPDATE"))
-        mapController.onResume()
+        Wearable.getMessageClient(this).addListener(messageListener)
     }
 
     override fun onPause() {
+        Wearable.getMessageClient(this).removeListener(messageListener)
         super.onPause()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(sensorDataReceiver)
-        mapController.onPause()
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
