@@ -163,6 +163,13 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Usuario no logueado: no se subirán datos a Firestore")
         }
 
+        // --- Prueba de conexión real ---
+        InternetUtil.isInternetAvailable(this) { disponible ->
+            runOnUiThread {
+                Log.d("InternetTest", "¿Internet real? $disponible")
+            }
+        }
+
         // SensorDataReceiver: define lambdas for handling sensor data and GPS updates
         sensorDataReceiver = SensorDataReceiver(
             onSensorDataReceived = { sensorName, valueStr ->
@@ -186,17 +193,25 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // Guardar en base de datos o subir a Firestore, enviando la ubicación actual
-                if (InternetUtil.isInternetAvailable(this)) {
-                    val record = SensorRecord(
-                        id = 0,
-                        sensorName = sensorName,
-                        value = valueStr,
-                        timestamp = System.currentTimeMillis().toString()
-                    )
-                    firestoreManager.uploadRecordWithLocation(record, currentLatitude, currentLongitude)
-                } else {
-                    databaseHelper.insertSensorData(sensorName, valueStr)
+                InternetUtil.isInternetAvailable(this) { disponible ->
+                    runOnUiThread {
+                        val record = SensorRecord(
+                            id = 0,
+                            sensorName = sensorName,
+                            value = valueStr,
+                            timestamp = System.currentTimeMillis().toString()
+                        )
+
+                        if (disponible) {
+                            Log.d("InternetCheck", "✅ Conexión detectada, subiendo a Firestore")
+                            firestoreManager.uploadRecordWithLocation(record, currentLatitude, currentLongitude)
+                        } else {
+                            Log.d("InternetCheck", "❌ Sin conexión, guardando en SQLite")
+                            databaseHelper.insertSensorData(sensorName, valueStr)
+                        }
+                    }
                 }
+
             },
             onGpsDataReceived = { lat, lon ->
                 currentLatitude = lat
