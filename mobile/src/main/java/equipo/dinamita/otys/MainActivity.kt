@@ -231,32 +231,17 @@ class MainActivity : AppCompatActivity() {
             "Bienvenido"
         }
     }
-    private val messageListener = MessageClient.OnMessageReceivedListener { messageEvent ->
-        if (messageEvent.path == "/sensor_data_path") {
-            val message = String(messageEvent.data)
-            Log.d("MainActivity", "Mensaje recibido del wearable: $message")
 
-            // Aquí puedes reenviar el mensaje a tu SensorDataReceiver o procesarlo directamente
-            // Por ejemplo, simular broadcast local:
-            runOnUiThread {
-                // Reutiliza tu código de procesamiento en sensorDataReceiver
-                val intent = Intent("SENSOR_DATA_UPDATE")
-                intent.putExtra("sensorData", message)
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-            }
-        }
-    }
 
     override fun onResume() {
         super.onResume()
-        Wearable.getMessageClient(this).addListener(messageListener)
+        LocalBroadcastManager.getInstance(this).registerReceiver(sensorDataReceiver, IntentFilter("SENSOR_DATA_UPDATE"))
     }
 
     override fun onPause() {
-        Wearable.getMessageClient(this).removeListener(messageListener)
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(sensorDataReceiver)
         super.onPause()
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
