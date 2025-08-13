@@ -36,7 +36,8 @@ class SyncActivity : AppCompatActivity() {
             tvProgress.text = "0%"
 
             firestoreManager.uploadAllSensorDataToFirestore(
-                onProgress = { current, total ->
+
+                    onProgress = { current, total ->
                     val percent = (current * 100) / total
                     progressBar.progress = percent
                     tvProgress.text = "$percent%"
