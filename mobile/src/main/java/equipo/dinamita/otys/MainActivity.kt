@@ -26,11 +26,15 @@ import equipo_dinamita.otys.firebase.FirestoreManager
 import org.osmdroid.config.Configuration
 import android.Manifest
 import android.content.pm.PackageManager
+import android.view.View
+import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
+import equipo.dinamita.otys.Sincronizar.SyncActivity
+
 class MainActivity : AppCompatActivity() {
 
     private val sensorsMutable = mutableListOf(
@@ -46,6 +50,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var mapContainer: FrameLayout
     private lateinit var mapController: MapController
+    private lateinit var syncContainer: FrameLayout
+
 
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
@@ -121,6 +127,8 @@ class MainActivity : AppCompatActivity() {
         viewPager = findViewById(R.id.viewPagerSensors)
         bottomNav = findViewById(R.id.bottomNavigationView)
         mapContainer = findViewById(R.id.mapContainer)
+        syncContainer = findViewById(R.id.syncContainer)
+
 
         // Firebase
         auth = FirebaseAuth.getInstance()
@@ -203,15 +211,48 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_gps -> {
+                    // Ocultar sincronización
+                    syncContainer.visibility = View.GONE
+
+                    // Mostrar mapa
                     mapController.showMap(currentLatitude, currentLongitude)
+                    viewPager.visibility = View.GONE
                     true
                 }
-                else -> {
+
+                R.id.navigation_syncro -> {
+                    // Ocultar mapa
                     mapController.hideMap()
+                    mapContainer.visibility = View.GONE
+                    viewPager.visibility = View.GONE
+
+                    // Inflar el layout de sincronización si aún no está cargado
+                    if (syncContainer.childCount == 0) {
+                        layoutInflater.inflate(R.layout.sync_layout, syncContainer, true)
+
+                        // Ejemplo: botón dentro del sync_layout
+                        val btnSync = syncContainer.findViewById<Button>(R.id.btnSync)
+                        btnSync.setOnClickListener {
+                            firestoreManager.uploadAllSensorDataToFirestore()
+                        }
+                    }
+
+                    // Mostrar sincronización
+                    syncContainer.visibility = View.VISIBLE
+                    true
+                }
+
+                else -> {
+                    // Ocultar todo
+                    syncContainer.visibility = View.GONE
+                    mapController.hideMap()
+                    viewPager.visibility = View.VISIBLE
                     true
                 }
             }
         }
+
+
 
         // Configurar menú usuario
         topAppBar.setNavigationOnClickListener {

@@ -14,7 +14,10 @@ class FirestoreManager(private val context: Context) {
     private val usersCollection = "SensorUser"
     private val sensorDataSubcollection = "sensor"
 
-    fun uploadAllSensorDataToFirestore() {
+    fun uploadAllSensorDataToFirestore(
+        onProgress: ((current: Int, total: Int) -> Unit)? = null,
+        onComplete: (() -> Unit)? = null
+    ) {
         val user = FirebaseAuth.getInstance().currentUser
         if (user == null) {
             Log.w("FirestoreManager", "Usuario no autenticado, no se subirán datos")
@@ -26,15 +29,15 @@ class FirestoreManager(private val context: Context) {
 
             if (sensorRecords.isEmpty()) {
                 Log.d("FirestoreManager", "No hay datos que subir")
+                onComplete?.invoke()
                 return
             }
 
             var successCount = 0
             val totalRecords = sensorRecords.size
-            var lastValueBySensor = mutableMapOf<String, Any?>()
+            val lastValueBySensor = mutableMapOf<String, Any?>()
 
             sensorRecords.forEach { record ->
-                // Verificar si el valor actual es distinto al último valor guardado para ese sensor
                 val lastValue = lastValueBySensor[record.sensorName]
                 if (lastValue != record.value) {
                     val firestoreRecord = hashMapOf(
@@ -49,33 +52,54 @@ class FirestoreManager(private val context: Context) {
                         .add(firestoreRecord)
                         .addOnSuccessListener {
                             successCount++
-                            Log.d("FirestoreManager", "Dato subido correctamente")
+                            onProgress?.invoke(successCount, totalRecords)
 
                             if (successCount == totalRecords) {
                                 sqliteHelper.deleteAllSensorData()
-                                Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
+                                onComplete?.invoke()
                             }
                         }
                         .addOnFailureListener { e ->
                             Log.w("FirestoreManager", "Error añadiendo documento", e)
+                            successCount++
+                            onProgress?.invoke(successCount, totalRecords)
+                            if (successCount == totalRecords) {
+                                onComplete?.invoke()
+                            }
                         }
 
-                    // Actualizar el último valor guardado para este sensor
                     lastValueBySensor[record.sensorName] = record.value
                 } else {
                     Log.d("FirestoreManager", "Dato repetido para sensor ${record.sensorName}, no se sube")
-                    // Contar también este como "procesado" para no bloquear el borrado local
                     successCount++
+                    onProgress?.invoke(successCount, totalRecords)
                     if (successCount == totalRecords) {
                         sqliteHelper.deleteAllSensorData()
-                        Log.d("FirestoreManager", "Todos los datos subidos y eliminados de la base local")
+                        onComplete?.invoke()
                     }
                 }
             }
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Error al subir datos a Firestore", e)
+            onComplete?.invoke()
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     fun uploadSingleRecordToFirestore(record: SensorRecord) {
         val user = FirebaseAuth.getInstance().currentUser

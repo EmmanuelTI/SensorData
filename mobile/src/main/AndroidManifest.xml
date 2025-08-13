@@ -28,6 +28,8 @@
             </intent-filter>
         </service>
 
+        <activity android:name=".Sincronizar.SyncActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

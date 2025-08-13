@@ -8,4 +8,9 @@
         android:id="@+id/navigation_gps"
         android:icon="@drawable/ic_gps"
         android:title="GPS" />
+
+    <item
+        android:id="@+id/navigation_syncro"
+        android:icon="@drawable/ic_sync"
+        android:title="Sincronizar" />
 </menu>
